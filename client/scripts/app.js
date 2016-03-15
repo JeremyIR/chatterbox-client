@@ -2,7 +2,9 @@
 
 var app = {
   friends: [],
-  server: 'https://api.parse.com/1/classes/messages'
+  server: 'https://api.parse.com/1/classes/messages',
+  currentRoom: 'lobby',
+  chatRooms: []
 };
 
 app.addFriend = function(friend) {
@@ -11,8 +13,10 @@ app.addFriend = function(friend) {
 
 app.init = function() {
   console.log('initialized');
-  // $('#send .submit').trigger('submit');
-  $('#send').on('submit', app.handleSubmit.bind(this)); 
+  $('#send').on('submit', function(event) {
+    event.preventDefault();
+    app.handleSubmit.call(this, event);
+  }); 
 };
 
 app.send = function(message) {
@@ -29,24 +33,12 @@ app.send = function(message) {
       // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
       console.error('chatterbox: Failed to send message', data);
     }
+  }).then(function() {
+    app.fetch();
   });
 };
 
 app.fetch = function() {
-  // function detox(str){
-  //   var re = /\%2F/gm; 
-  //   var m;
-     
-  //   while ((m = re.exec(str)) !== null) {
-  //       if (m.index === re.lastIndex) {
-  //           re.lastIndex++;
-  //       }
-  //       // View your result using the m-variable.
-  //       // eg m[0] etc.
-  //     console.log(m);
-  //   }
-  //   return m;
-  // }
   $.ajax({
     url: app.server,
     type: 'GET',
@@ -60,17 +52,32 @@ app.fetch = function() {
       console.error('chatterbox: Failed to recieve messages', data);
     }
   }).then(function(data) {
-    console.log(data);
+    
+    app.clearMessages();
+    
     $.each(data.results, function(index, item) {
       var msg = item.text;
       var usr = item.username;
       var rmn = item.roomname;
-      // console.log(usr, "\t\t" ,rmn, "\t\t", msg);
-      if (rmn && msg && usr) { 
-        app.addMessage({text: msg, username: usr, roomname: rmn});
+      var messageObject = {text: msg, username: usr, roomname: rmn};
+
+
+
+      // if(JSON.stringify(rmn) + "%20") { 
+      //   app.chatRooms.push(JSON.stringify(rmn)); 
+      // }
+      app.addRoom(JSON.stringify(rmn));
+      if (JSON.stringify(rmn) && msg && usr && rmn === app.currentRoom) { 
+        app.addMessage(messageObject);
       }
     });
   });
+  // console.log(jqxhr);
+};
+
+
+app.changeRoom = function() {
+  // $(document);
 };
 
 app.clearMessages = function() {
@@ -87,23 +94,27 @@ app.addMessage = function(message) {
   var $text = $('<span class = "message"></span>').text(message.text);
   var $roomname = $('<span class = "roomname"></span>').text(message.roomname);
   $messageBox.append([$username, $text, $roomname]);
+  console.log($messageBox.text());
   $('#chats').append($messageBox);
 };
 
-app.handleSubmit = function() {
-
+app.handleSubmit = function(event) {
+  // app.send(message);
+  var messageObject = {
+    username: document.location.search.split('=')[1],
+    text: event.target[0].value,
+    roomname: 'lobby'
+  };
+  app.send(messageObject);
+  console.log("SUBMIT HANDLED", event.target[0].value, document.location.search.split("=")[1]);
 };
 
 
 
 app.addRoom = function(roomName) {
-  $('#roomSelect').append('<a>' + roomName + '</a>');
+  $('#roomSelect').append('<option></option>').text(roomName);
 };
 
-// function escape() {};
-// do ^^ this to vvv that
-// var message = {
-//   username: 'shawndrost',
-//   text: 'trololo',
-//   roomname: '4chan'
-// };
+$(document).ready(function(){
+  app.init();
+});
