@@ -33,18 +33,43 @@ app.send = function(message) {
 };
 
 app.fetch = function() {
+  // function detox(str){
+  //   var re = /\%2F/gm; 
+  //   var m;
+     
+  //   while ((m = re.exec(str)) !== null) {
+  //       if (m.index === re.lastIndex) {
+  //           re.lastIndex++;
+  //       }
+  //       // View your result using the m-variable.
+  //       // eg m[0] etc.
+  //     console.log(m);
+  //   }
+  //   return m;
+  // }
   $.ajax({
     url: app.server,
     type: 'GET',
-    data: JSON.stringify(message),
+    // data: JSON.stringify(message), // ? is this right?
     contentType: 'application/json',
     success: function (data) {
-      console.log('chatterbox: Message sent');
+      console.log('chatterbox: Messages recieved', data);
     },
     error: function (data) {
       // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-      console.error('chatterbox: Failed to send message', data);
+      console.error('chatterbox: Failed to recieve messages', data);
     }
+  }).then(function(data) {
+    console.log(data);
+    $.each(data.results, function(index, item) {
+      var msg = item.text;
+      var usr = item.username;
+      var rmn = item.roomname;
+      // console.log(usr, "\t\t" ,rmn, "\t\t", msg);
+      if (rmn && msg && usr) { 
+        app.addMessage({text: msg, username: usr, roomname: rmn});
+      }
+    });
   });
 };
 
@@ -53,14 +78,14 @@ app.clearMessages = function() {
 };
 
 app.addMessage = function(message) {
-  var $messageBox = $('<div></div>');
-  var $username = $('<span class = "username">' + message.username + '</span>')
+  var $messageBox = $('<div class="chat"></div>');
+  var $username = $('<div class = "username"></div>').text(message.username)
     .on('click', function(event) {
       app.addFriend();
     });
 
-  var $text = $('<span class = "message">' + message.text + '</span>');
-  var $roomname = $('<span class = "roomname">' + message.roomname + '</span>');
+  var $text = $('<span class = "message"></span>').text(message.text);
+  var $roomname = $('<span class = "roomname"></span>').text(message.roomname);
   $messageBox.append([$username, $text, $roomname]);
   $('#chats').append($messageBox);
 };
