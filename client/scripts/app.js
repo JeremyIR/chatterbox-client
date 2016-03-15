@@ -9,7 +9,12 @@ app.addFriend = function(friend) {
   app.friends.push(friend);
 };
 
-app.init = function() {};
+app.init = function() {
+  console.log('initialized');
+  // $('#send .submit').trigger('submit');
+  $('#send').on('submit', app.handleSubmit.bind(this)); 
+};
+
 app.send = function(message) {
   $.ajax({
     // This is the url you should use to communicate with the parse API server.
@@ -63,11 +68,8 @@ app.addMessage = function(message) {
 app.handleSubmit = function() {
 
 };
-$('.submit').click(function() {
-  $('#send').submit(function() {
-    app.handleSubmit();
-  }); 
-});
+
+
 
 app.addRoom = function(roomName) {
   $('#roomSelect').append('<a>' + roomName + '</a>');
