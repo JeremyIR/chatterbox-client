@@ -88,4 +88,7 @@ form input[type=text] {
     padding: 10px;
 }
 .hideoption { display:none; visibility:hidden; height:0; font-size:0; }
-    
+.highlighted {
+    color: white;
+    background-color: blue;
+}

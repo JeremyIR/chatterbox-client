@@ -1,15 +1,24 @@
 // YOUR CODE HERE:
+var app = {
+  friends: {},
+  server: 'https://api.parse.com/1/classes/messages',
+  currentRoom: 'lobby',
+  chatRooms: {'create a new room': true}
+};
+
 $(document).ready(function() {
 
-  var app = {
-    friends: [],
-    server: 'https://api.parse.com/1/classes/messages',
-    currentRoom: 'lobby',
-    chatRooms: {'create a new room': true}
-  };
 
   app.addFriend = function(friend) {
-    app.friends.push(friend);
+    app.friends[friend] = friend;
+    for (var frnd in app.friends) {
+      console.log('in for loop');
+      $('.chat > .username[__data__=' + friend + ']')
+        .on('click', function(event) {
+          console.log('setting click handler?', event, $(this));
+          $(this).toggleClass('highlighted'); 
+        });
+    }
   };
 
   app.init = function() {
@@ -84,11 +93,11 @@ $(document).ready(function() {
     $.ajax({
       url: app.server,
       type: 'GET',
-      // data: JSON.stringify(message), // ? is this right?
       contentType: 'application/json',
       success: function (data) {
         console.log('chatterbox: Messages recieved', data);
         app.clearMessages();
+        $('#roomSelect').children().remove();
     
         $.each(data.results, function(index, item) {
           var msg = item.text || ' ';
@@ -100,17 +109,34 @@ $(document).ready(function() {
 
 
           if (rmn) { 
-            if (app.chatRooms[lowerCaseRoomName] !== true ) {
+            // there could be:
+              //[ ] a chatRoom we haven't stored and that we haven't appended to the page
+              //[ ] a chatRoom we haven't stored and that we have appended to the page
+              //[x] a chatRoom we have stored and that have appended to the page
+              //[ ] a chatRoom we have stored and that we haven't appended to the page
+
+            // if there is no existing chatRoom with the same name in storage:
+            if ( app.chatRooms[lowerCaseRoomName] === undefined ) {
+              // create the chatRoom key in storage
               app.chatRooms[lowerCaseRoomName] = true; 
-              app.addRoom(rmn);
             }
+
+            
+            // there is no check about whether it's on the page
+            if (app.chatRooms[lowerCaseRoomName] === true) {
+              app.addRoom(rmn);
+              app.chatRooms[lowerCaseRoomName] = false; 
+            }
+            // otherwise, if there already exists chatRoom with the same name in storage:
+              // append chatRoom name only once to the list
+            // then reset to true  .... this is awful.
+
           }
 
           if (lowerCaseRoomName && msg && usr && rmn === app.currentRoom) { 
             app.addMessage(messageObject);
           }
         });
-
 
       },
       error: function (data) {
@@ -138,8 +164,10 @@ $(document).ready(function() {
     var $messageBox = $('<div class="chat"></div>');
     var $username = $('<div class = "username"></div>').text(message.username)
       .on('click', function(event) {
-        app.addFriend();
-      });
+        console.log(event);
+        app.addFriend(event.currentTarget.textContent);
+      })
+      .attr('__data__', message.username);
     var $text = $('<span class = "message"></span>').text(message.text);
     var $roomname = $('<span class = "roomname"></span>').text(message.roomname);
     
@@ -162,6 +190,7 @@ $(document).ready(function() {
 
 
   app.addRoom = function(roomName) {
+    console.log('called addRoom');
     $('#roomSelect')
       .append(
         $('<option/>')
