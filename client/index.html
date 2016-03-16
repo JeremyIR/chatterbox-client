@@ -18,7 +18,14 @@
 
     <div id="main">
       <h1>chatterbox</h1>
-      <option id="roomSelect"></option>
+      <div>
+        <span>username : </span>
+        <span id="username"></span>
+      </div>
+      <select id="roomSelect" >
+        <option selected="selected" disabled="disabled" class="hideoption">Select a room</option>
+        <option>create a new room</option>
+      </select>
       <form action="#" id="send" method="post">
         <input type="text" name="message" id="message">
         <input type="submit" name="submit" class="submit">
